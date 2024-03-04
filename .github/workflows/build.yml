@@ -58,7 +58,7 @@ jobs:
       - name: build
         run : |
           go build -o bin/ ./cmd/...
-          tar cvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar" bin/*
+          tar zcvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar" bin/*
       - uses: actions/upload-artifact@v4
         with:
           name: "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar"
