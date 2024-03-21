@@ -31,6 +31,7 @@ jobs:
           gh release delete --yes \
             --repo="${{github.repository}}" \
             --cleanup-tag "$latestTag" || echo "Nothing to delete."
+          sleep 1
           gh release create "$latestTag" \
             --repo="${{github.repository}}" \
             --title="$latestTag" \
