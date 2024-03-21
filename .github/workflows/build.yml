@@ -64,6 +64,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{needs.prepare.outputs.tag}}" "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.gz" \
+          gh release upload "${{needs.prepare.outputs.tag}}" "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar" \
             --clobber \
             --repo="${{github.repository}}"
