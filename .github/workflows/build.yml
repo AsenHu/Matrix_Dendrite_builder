@@ -59,11 +59,11 @@ jobs:
       - name: build
         run : |
           go build -o bin/ ./cmd/...
-          tar zcvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.gz" bin/*
+          tar Jcvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.xz" bin/*
       - name: upload
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{needs.prepare.outputs.tag}}" "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.gz" \
+          gh release upload "${{needs.prepare.outputs.tag}}" "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.xz" \
             --clobber \
             --repo="${{github.repository}}"
