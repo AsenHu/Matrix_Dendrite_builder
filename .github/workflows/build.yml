@@ -59,10 +59,6 @@ jobs:
         run : |
           go build -o bin/ ./cmd/...
           tar zcvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.gz" bin/*
-      - uses: actions/upload-artifact@v4
-        with:
-          name: "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.gz"
-          path: "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.gz"
       - name: upload
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
