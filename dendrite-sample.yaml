@@ -1,0 +1,342 @@
+# 这是 Dendrite 配置文件。
+
+# 配置分成多个部分 - 每个 Dendrite 组件都有一个配置部分，
+# 除了适用于所有组件的“全局”部分。
+
+# 配置文件的版本。
+version: 2
+
+# 全局 Matrix 配置。该配置适用于所有组件。
+global:
+  # 此 homeserver 的域名。
+  server_name: localhost
+
+  # 用于签署请求和事件的签名私钥文件的路径。
+  # 请注意，这不是用于 TLS 的相同私钥！要生成签名密钥，请使用“./bin/generate-keys --private-key matrix_key.pem”。
+  private_key: matrix_key.pem
+
+  # 旧签名密钥的路径和到期时间戳（以毫秒精度的 UNIX 时间戳），
+  # 曾经在此域名上使用过的签名密钥。这些密钥将不会用于联合请求或事件签名，
+  # 但将提供给任何请求时尝试验证旧事件的其他 homeserver。
+  old_private_keys:
+  # 如果旧的私钥文件可用：
+  # - private_key: old_matrix_key.pem
+  #   expired_at: 1601024554498
+  # 如果仅已知公钥（以 base64 格式）和密钥 ID：
+  # - public_key: mn59Kxfdq9VziYHSBzI7+EDPDcBS2Xl7jeUdiiQcOnM=
+  #   key_id: ed25519:mykeyid
+  #   expired_at: 1601024554498
+
+  # 远程服务器在再次请求之前可以缓存我们的服务器签名密钥的时间长短。
+  # 增加此数字将减少其他服务器对我们密钥的请求数量，但会增加受损密钥被其他 homeserver 认为有效的时间。
+  key_validity_period: 168h0m0s
+
+  # 全局数据库连接池，仅适用于 PostgreSQL 单体部署。如果
+  # 此部分填充，则可以省略所有其他部分中的“database”块。
+  # 对于使用 SQLite 数据库的单体部署，
+  # 必须为每个组件配置“database”块。
+  database:
+    connection_string: postgresql://username:password@hostname/dendrite?sslmode=disable
+    max_open_conns: 90
+    max_idle_conns: 5
+    conn_max_lifetime: -1
+
+  # 内存中缓存的配置。缓存通常通过将频繁访问的项目（如事件、标识符等）保留在内存中
+  # 而不是从数据库中读取它们来提高性能。
+  cache:
+    # 全局缓存的估计最大大小（以字节为单位），或者在指定适当的'tb'、'gb'、'mb'或'kb'后缀时，
+    # 以 TB、GB、MB 或 KB 为单位。请注意，这不是硬限制，也不是整个进程的内存限制。
+    # 太小的缓存最终可能提供很少或没有好处。
+    max_size_estimated: 1gb
+
+    # 内存中的缓存条目在被驱逐和/或从数据库刷新之前的最长时间。较低的值会导致
+    # 更容易接受新的缓存条目，但可能会增加与较高值相比的数据库负载，因此要保守调整。
+    # 较高的值可能会使新项目更难进入缓存，例如，如果新房间突然变得流行起来。
+    max_age: 1h
+
+  # 用于委派服务器-服务器通信的服务器名称，带有可选的端口。
+  # 例如 localhost:443
+  well_known_server_name: ""
+
+  # 委派客户端-服务器通信的基本 URL，例如 https://localhost
+  well_known_client_name: ""
+
+  # 用于委派滑动同步通信的服务器名称，带有可选的端口。
+  # 还需要配置“well_known_client_name”。
+  well_known_sliding_sync_proxy: ""
+
+  # 服务器将信任的身份服务器的域的列表，以验证第三方标识符，
+  # 如电话号码和电子邮件地址。
+  trusted_third_party_id_servers:
+    - matrix.org
+    - vector.im
+
+  # 禁用联合。Dendrite 将无法与 Matrix 联合中的其他服务器通信，
+  # 联合 API 也不会暴露。
+  disable_federation: false
+
+  # 配置状态事件的处理。入站控制我们是否接收
+  # 来自其他服务器的状态事件，出站控制我们是否向其他服务器发送
+  # 我们本地用户的状态事件。
+  presence:
+    enable_inbound: false
+    enable_outbound: false
+
+  # 配置家中统计数据报告。这些统计数据包含服务器的名称、活动用户数以及关于部署配置的一些信息。
+  # 我们使用此信息来了解 Dendrite 如何在野外使用。
+  report_stats:
+    enabled: false
+    endpoint: https://panopticon.matrix.org/push
+
+  # 服务器通知允许服务器管理员向服务器上的所有用户发送消息。
+  server_notices:
+    enabled: false
+    # 本地部分、显示名称和头像 URL（作为 mxc:// URL）用于发送服务器通知的用户。
+    # 这些对部署中的所有用户可见。
+    local_part: "_server"
+    display_name: "Server Alerts"
+    avatar_url: ""
+    # 发送服务器通知时要使用的房间名称。此房间名称将
+    # 显示在用户客户端中。
+    room_name: "Server Alerts"
+
+  # NATS JetStream 的配置。
+  jetstream:
+    # 要连接的 NATS 服务器地址列表。如果未指定，则在单体模式下运行 Dendrite 时将自动启动内部 NATS 服务器。
+    addresses:
+    # - localhost:4222
+
+    # 禁用 NATS 的 TLS 证书验证。这是
+    # 不推荐在生产中使用，因为它可能允许 NATS 流量
+    # 发送到不安全的端点。
+    disable_tls_validation: false
+
+    # 用于存储 JetStream 流的持久目录。此目录应该是
+    # 在 Dendrite 重新启动时保留。
+    storage_path: ./
+
+    # 用于此 homeserver 的流名称的前缀 - 仅在您运行多个 Dendrite 服务器时才有用
+    # 相同的 NATS 部署。
+    topic_prefix: Dendrite
+
+  # Prometheus 指标收集的配置。
+  metrics:
+    enabled: false
+    basic_auth:
+      username: metrics
+      password: metrics
+
+  # 可选的 DNS 缓存。DNS 缓存可以减轻 DNS 服务器的负载，
+  # 如果没有本地缓存解析器可供使用。
+  dns_cache:
+    enabled: false
+    cache_size: 256
+    cache_lifetime: "5m" # 5 minutes; https://pkg.go.dev/time@master#ParseDuration
+
+# Appservice API 的配置。
+app_service_api:
+  # 禁用 appservices 的 TLS 证书验证。这是
+  # 不推荐在生产中使用，因为它可能允许 appservices 流量
+  # 发送到不安全的端点。
+  disable_tls_validation: false
+
+  # 在 appservice 请求中除了 Authorization 头之外还发送 access_token 查询参数。
+  # 这可能会导致 hs_tokens 被保存到日志中，
+  # 因此除非绝对必要，否则不应启用。
+  legacy_auth: false
+  # 使用旧的无前缀路径进行 appservice 请求。
+  legacy_paths: false
+
+  # 要加载到此 homeserver 的 appservice 配置文件。
+  config_files:
+  #  - /path/to/appservice_registration.yaml
+
+# Client API 的配置。
+client_api:
+  # 防止新用户能够在此 homeserver 上注册，除非
+  # 使用下面的注册共享密钥。
+  registration_disabled: true
+
+  # 禁止创建新的访客帐户。通过设置 'registration_disabled' 上面也会隐式禁用访客注册。
+  guests_disabled: true
+
+  # 如果设置，允许任何知道共享密钥的人注册，无论
+  # 是否禁用了注册。
+  registration_shared_secret: ""
+
+  # 是否要求注册时使用 reCAPTCHA。如果您已经启用了注册，
+  # 则强烈建议这样做，以减少您的 homeserver 被用于协调式垃圾邮件攻击的风险。
+  enable_registration_captcha: false
+
+  # ReCAPTCHA 的设置。
+  recaptcha_public_key: ""
+  recaptcha_private_key: ""
+  recaptcha_bypass_secret: ""
+  
+  # 要使用 hcaptcha.com 而不是 ReCAPTCHA，请设置以下参数，否则保持为空。
+  # recaptcha_siteverify_api: "https://hcaptcha.com/siteverify"
+  # recaptcha_api_js_url: "https://js.hcaptcha.com/1/api.js"
+  # recaptcha_form_field: "h-captcha-response"
+  # recaptcha_sitekey_class: "h-captcha"
+
+
+  # 此 homeserver 应向客户端发送的 TURN 服务器信息。
+  turn:
+    turn_user_lifetime: "5m"
+    turn_uris:
+    #  - turn:turn.server.org?transport=udp
+    #  - turn:turn.server.org?transport=tcp
+    turn_shared_secret: ""
+    # 如果您的 TURN 服务器需要静态凭据，则需要在这里输入
+    # 它们，而不是提供共享密钥。请注意，这些凭据
+    # 将对客户端可见！
+    # turn_username: ""
+    # turn_password: ""
+
+  # 速率限制端点的设置。速率限制在特定主机的请求占用了阈值
+  # 数量的“插槽”后开始生效。每个“插槽”都会在冷却时间后释放
+  # 在毫秒。服务器管理员和 appservice 用户默认不受速率限制。
+  rate_limiting:
+    enabled: true
+    threshold: 20
+    cooloff_ms: 500
+    exempt_user_ids:
+    #  - "@user:domain.com"
+
+# 联合 API 的配置。
+federation_api:
+  # 我们将尝试将失败的事务重发到特定服务器的次数。该
+  # 回退是 2**x 秒，因此 1 = 2 秒，2 = 4 秒，3 = 8 秒等等。
+  # 一旦超过最大重试次数，Dendrite 将不再尝试发送事务到
+  # 该服务器，直到它再次恢复并与我们连接。
+  send_max_retries: 16
+
+  # 禁用远程联合 homeservers 的 TLS 证书验证。不要
+  # 在生产中启用此选项，因为它会带来安全风险！
+  disable_tls_validation: false
+
+  # 禁用 HTTP keepalives，这也防止了连接复用。Dendrite 通常
+  # 会将 HTTP 连接保持到远程主机 5 分钟，因为它们可以比
+  # 每次打开新连接更快地重用。禁用 keepalives 将导致
+  # HTTP 连接在成功请求后立即关闭，但可能会导致更多 CPU 和
+  # 内存用于每个新连接的 TLS 握手。
+  disable_http_keepalives: false
+
+  # 在直接密钥提取失败时作为备份使用的 Perspective 密钥服务器。这可能
+  # 需要满足加入某些房间时不再在线的服务器的密钥请求。
+  key_perspectives:
+    - server_name: matrix.org
+      keys:
+        - key_id: ed25519:auto
+          public_key: Noi6WqcDj0QmPxCNQqgezwTlBKrfqehY1u2FyWP9uYw
+        - key_id: ed25519:a_RXGa
+          public_key: l8Hft5qXKn1vfHrg3p4+W8gELQVo8N13JkluMfmn2sQ
+
+  # 此选项将控制 Dendrite 是否更喜欢直接查找密钥
+  # 还是首先尝试透视服务器，将直接提取作为
+  # 最后手段。
+  prefer_direct_fetch: false
+
+# 媒体 API 的配置。
+media_api:
+  # 上传媒体的存储路径。可以是相对的或绝对的。
+  base_path: ./media_store
+
+  # 对于上传到此 homeserver 的媒体，允许的最大文件大小（以字节为单位）
+  # （0 = 无限制）。如果使用反向代理，请确保它允许至少
+  # 这么大的请求（例如，在 nginx 中的 client_max_body_size 设置）。
+  max_file_size_bytes: 10485760
+
+  # 是否在需要时动态生成缩略图。
+  dynamic_thumbnails: false
+
+  # 可同时运行的最大缩略图生成器数量。
+  max_thumbnail_generators: 10
+
+  # 要为媒体内容生成的缩略图大小列表。
+  thumbnail_sizes:
+    - width: 32
+      height: 32
+      method: crop
+    - width: 96
+      height: 96
+      method: crop
+    - width: 640
+      height: 480
+      method: scale
+
+# 在此 homeserver 上启用实验性 MSC 的配置。
+mscs:
+  mscs:
+  #  - msc2836  # （线程，参见 https://github.com/matrix-org/matrix-doc/pull/2836）
+
+# Sync API 的配置。
+sync_api:
+  # 此选项控制要检查哪个 HTTP 标头以找到客户端的真实远程 IP 地址。
+  # 如果 Dendrite 在反向代理服务器后运行，则可能需要这样做。
+  # real_ip_header: X-Real-IP
+
+  # 全文搜索引擎的配置。
+  search:
+    # 是否启用搜索。
+    enabled: false
+
+    # 搜索索引将创建的路径。
+    index_path: "./searchindex"
+
+    # 服务器上最可能使用的语言 - 用于索引，以
+    # 确保返回的结果与预期匹配。可能的语言的完整列表
+    # 可以在 https://github.com/blevesearch/bleve/tree/master/analysis/lang 找到
+    language: "en"
+
+# 用户 API 的配置。
+user_api:
+  # 注册/登录时哈希密码的成本。默认值：10。最小值：4，最大值：31
+  # 有关更多信息，请参见 https://pkg.go.dev/golang.org/x/crypto/bcrypt 。
+  # 将此值设置较低可以使注册/登录消耗更少的 CPU 资源，但会
+  # 以数据库泄露为代价降低安全性。将此值设置较高会使注册/登录
+  # 消耗更多的 CPU 资源，但会使密码哈希更难以暴力破解。如果在测试中执行或
+  # 在嵌入式 Dendrite 实例（例如 WASM 构建）上执行，则可以将此值降低。
+  bcrypt_cost: 10
+
+  # 为从 /_matrix/client/r0/user/{userId}/openid/request_token 端点发出的依赖方颁发的令牌
+  # 被视为有效的时间长度，以毫秒为单位。
+  # 默认生存期为 3600000 毫秒（60 分钟）。
+  # openid_token_lifetime_ms: 3600000
+
+  # 在此 homeserver 上注册的用户将自动加入到 "auto_join_rooms" 选项下列出的房间。
+  # 默认情况下，此列表中包含的任何房间别名都将在首次用户注册到 homeserver 时创建为可公开加入的房间。
+  # 如果房间已存在，请确保它是可公开加入的房间，即房间的加入规则必须设置为“public”。
+  # 由于 Spaces 实际上只是房间，因此也可以使用 Space 别名。
+  auto_join_rooms:
+  #  - "#main:matrix.org"
+
+  # 要为 DeviceListUpdater 启动的工作程序数量。默认为 8。
+  # 只有当“InputDeviceListUpdate”流无限增长时才需要更新。
+  # worker_count: 8
+
+# Opentracing 的配置。
+# 有关工作原理和设置方法的信息，请参见 https://github.com/matrix-org/dendrite/tree/master/docs/tracing 。
+tracing:
+  enabled: false
+  jaeger:
+    serviceName: ""
+    disabled: false
+    rpc_metrics: false
+    tags: []
+    sampler: null
+    reporter: null
+    headers: null
+    baggage_restrictions: null
+    throttler: null
+
+# 日志记录配置。 “std” 日志类型控制发送到
+# stdout 的日志。 “file” 日志类型控制写入磁盘上的日志文件夹。
+# 支持的日志级别为 “debug”、“info”、“warn”、“error”。
+logging:
+  - type: std
+    level: info
+  - type: file
+    level: info
+    params:
+      path: ./logs
