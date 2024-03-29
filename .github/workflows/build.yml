@@ -59,7 +59,8 @@ jobs:
       - name: build
         run : |
           go build -o bin/ ./cmd/...
-          tar Jcvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.xz" bin/*
+          tar cvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar" bin/*
+          xz -9v "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar"
       - name: upload
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
