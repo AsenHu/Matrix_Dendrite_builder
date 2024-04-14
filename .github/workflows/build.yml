@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: get-tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run : |
           if [ "${{github.event.inputs.tag}}" ]
           then
@@ -31,10 +33,11 @@ jobs:
           gh release delete --yes \
             --repo="${{github.repository}}" \
             --cleanup-tag "$latestTag" || echo "Nothing to delete."
+          echo "LATEST_TAG=$latestTag" >> $GITHUB_ENV
       - uses: actions/checkout@v4
         with:
           repository: 'matrix-org/dendrite'
-          ref: "$latestTag"
+          ref: "${{ env.LATEST_TAG }}"
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
@@ -47,10 +50,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$latestTag" \
+          gh release create "${{ env.LATEST_TAG }}" \
             --repo="${{github.repository}}" \
-            --title="$latestTag" \
+            --title="${{ env.LATEST_TAG }}" \
             --generate-notes
-          gh release upload "${{needs.prepare.outputs.tag}}" "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.xz" \
+          gh release upload "${{ env.LATEST_TAG }}" "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar.xz" \
             --clobber \
             --repo="${{github.repository}}"
