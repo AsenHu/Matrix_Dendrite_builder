@@ -58,7 +58,7 @@ jobs:
           go-version: 'stable'
       - name: build
         run : |
-          go build -o bin/ ./cmd/...
+          go build -ldflags "-s -w" -o bin/ ./cmd/...
           tar cvf "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar" bin/*
           xz -9v "bin-${{env.GOOS}}-${{env.GOARCH}}-${{env.GOAMD64}}.tar"
       - name: upload
