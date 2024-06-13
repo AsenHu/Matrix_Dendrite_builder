@@ -1,0 +1,59 @@
+name: build
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The tag to build."
+        required: false
+
+jobs:
+  build:
+    env:
+      CGO_ENABLED: 0
+    runs-on: ubuntu-latest
+    steps:
+      - name: get-tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run : |
+          if [ "${{github.event.inputs.tag}}" ]
+          then
+            latestTag="${{github.event.inputs.tag}}"
+          else
+            latestTag="$(curl -L https://api.github.com/repos/matrix-org/sliding-sync/releases/latest | jq -r '.tag_name')"
+          fi
+          gh release delete --yes \
+            --repo="${{github.repository}}" \
+            --cleanup-tag "$latestTag" || echo "Nothing to delete."
+          echo "LATEST_TAG=$latestTag" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+        with:
+          repository: 'matrix-org/sliding-sync'
+          ref: "${{ env.LATEST_TAG }}"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+      - name: build-linux-amd64-v4
+        env:
+          GOOS: linux
+          GOARCH: amd64
+          GOAMD64: v4
+        run : |
+          go build -ldflags "-s -w" -o syncv3-linux-amd64-v4 ./cmd/syncv3
+          echo "build finished"
+          xz -9v "syncv3-linux-amd64-v4"
+      - name: upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ env.LATEST_TAG }}" \
+            --repo="${{github.repository}}" \
+            --title="${{ env.LATEST_TAG }}" \
+            --generate-notes
+          gh release upload "${{ env.LATEST_TAG }}" "syncv3-linux-amd64-v4.xz" \
+            --clobber \
+            --repo="${{github.repository}}"
