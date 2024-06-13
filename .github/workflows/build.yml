@@ -42,7 +42,7 @@ jobs:
         env:
           GOOS: linux
           GOARCH: amd64
-          GOAMD64: v3
+          GOAMD64: v4
         run : |
           go build -ldflags "-s -w" -o bin/ ./cmd/...
           echo "build finished"
