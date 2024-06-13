@@ -1,4 +1,4 @@
-name: build
+name: sliding-sync
 
 permissions:
   contents: write
