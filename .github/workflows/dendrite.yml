@@ -37,17 +37,17 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
-      - name: build-linux-amd64-v4
+      - name: build-linux-amd64-v2
         env:
           GOOS: linux
           GOARCH: amd64
-          GOAMD64: v4
+          GOAMD64: v2
         run : |
           go build -ldflags "-s -w" -o bin/ ./cmd/...
           echo "build finished"
-          tar cvf "bin-linux-amd64-v4.tar" bin/*
+          tar cvf "bin-linux-amd64-v2.tar" bin/*
           echo "tar finished"
-          xz -9v "bin-linux-amd64-v4.tar"
+          xz -9v "bin-linux-amd64-v2.tar"
       - name: upload
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,6 +56,6 @@ jobs:
             --repo="${{github.repository}}" \
             --title="${{ env.LATEST_TAG }}" \
             --generate-notes
-          gh release upload "${{ env.LATEST_TAG }}" "bin-linux-amd64-v4.tar.xz" \
+          gh release upload "${{ env.LATEST_TAG }}" "bin-linux-amd64-v2.tar.xz" \
             --clobber \
             --repo="${{github.repository}}"
