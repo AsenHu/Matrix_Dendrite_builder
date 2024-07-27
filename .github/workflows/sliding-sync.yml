@@ -37,15 +37,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
-      - name: build-linux-amd64-v2
+      - name: build-linux-amd64-v3
         env:
           GOOS: linux
           GOARCH: amd64
-          GOAMD64: v2
+          GOAMD64: v3
         run : |
-          go build -ldflags "-s -w" -o syncv3-linux-amd64-v2 ./cmd/syncv3
+          go build -ldflags "-s -w" -o syncv3-linux-amd64-v3 ./cmd/syncv3
           echo "build finished"
-          xz -9v "syncv3-linux-amd64-v2"
+          xz -9v "syncv3-linux-amd64-v3"
       - name: upload
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,6 +54,6 @@ jobs:
             --repo="${{github.repository}}" \
             --title="${{ env.LATEST_TAG }}" \
             --generate-notes
-          gh release upload "${{ env.LATEST_TAG }}" "syncv3-linux-amd64-v2.xz" \
+          gh release upload "${{ env.LATEST_TAG }}" "syncv3-linux-amd64-v3.xz" \
             --clobber \
             --repo="${{github.repository}}"
