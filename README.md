@@ -7,4 +7,4 @@ https://github.com/matrix-org/dendrite/commit/0f6b81f4560855d57550452463cc8d8b91
 
 conduwuit 完整中文配置文件
 
-https://github.com/girlbossceo/conduwuit/commit/1c751168c6e237a29dd0cf00b771e8ea3ca961f1
+https://github.com/girlbossceo/conduwuit/commit/f0a1aaf7bcddbcec45cfa6c8040fada967a32cca
